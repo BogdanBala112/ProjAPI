@@ -3,6 +3,7 @@ from typing import Literal
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 
+
 class Ticket(BaseModel):
     category: Literal["billing", "technical", "account", "feedback", "other"]
     priority: Literal["low", "medium", "high", "urgent"]
