@@ -93,6 +93,9 @@ async def classify_batch_item(
     except ModelResponseError as error:
         return BatchFailure(text=text, error=f"Invalid model response: {error}")
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.post("/tickets/classify", response_model=Ticket)
 async def classify_ticket_endpoint(
