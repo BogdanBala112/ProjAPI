@@ -1,7 +1,7 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from typing import Literal
+from typing import Annotated, Literal
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -37,6 +37,11 @@ def get_client(request: Request) -> AsyncOpenAI:
 
 def get_semaphore(request: Request) -> asyncio.Semaphore:
     return request.app.state.llm_semaphore
+
+
+OpenAIClient = Annotated[AsyncOpenAI, Depends(get_client)]
+LLMSemaphore = Annotated[asyncio.Semaphore, Depends(get_semaphore)]
+
 
 class ClassifyTicket(BaseModel):
     text: str = Field(
@@ -93,15 +98,17 @@ async def classify_batch_item(
     except ModelResponseError as error:
         return BatchFailure(text=text, error=f"Invalid model response: {error}")
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
 
+
 @app.post("/tickets/classify", response_model=Ticket)
 async def classify_ticket_endpoint(
     ticket: ClassifyTicket,
-    client: AsyncOpenAI = Depends(get_client),
-    semaphore: asyncio.Semaphore = Depends(get_semaphore),
+    client: OpenAIClient,
+    semaphore: LLMSemaphore,
 ):
     try:
         async with semaphore:
@@ -121,13 +128,10 @@ async def classify_ticket_endpoint(
 @app.post("/tickets/classify-batch", response_model=ClassifyBatchResponse)
 async def classify_ticket_batch_endpoint(
     batch: ClassifyBatchRequest,
-    client: AsyncOpenAI = Depends(get_client),
-    semaphore: asyncio.Semaphore = Depends(get_semaphore),
+    client: OpenAIClient,
+    semaphore: LLMSemaphore,
 ):
     results = await asyncio.gather(
-        *(
-            classify_batch_item(text, client, semaphore)
-            for text in batch.tickets
-        )
+        *(classify_batch_item(text, client, semaphore) for text in batch.tickets)
     )
     return ClassifyBatchResponse(results=results)

@@ -10,11 +10,7 @@ from main import app, get_client, get_semaphore
 
 def parsed_response(ticket: Ticket):
     return SimpleNamespace(
-        choices=[
-            SimpleNamespace(
-                message=SimpleNamespace(parsed=ticket, refusal=None)
-            )
-        ]
+        choices=[SimpleNamespace(message=SimpleNamespace(parsed=ticket, refusal=None))]
     )
 
 

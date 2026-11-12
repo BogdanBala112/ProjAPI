@@ -1,6 +1,8 @@
-import pytest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
+
+import pytest
+
 from llm_call import Ticket, classify_ticket
 
 
